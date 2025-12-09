@@ -62,7 +62,9 @@ function App() {
         etc., and Recipe AI will generate an all-new recipe on demand...
       </Text>
       <Flex as="form" direction="column" gap="medium" marginTop="medium">
-        <TextField
+                <TextField
+          label="Ingredients"
+          labelHidden
           placeholder="Ingredient1, Ingredient2, Ingredient3,...etc"
           value={ingredients}
           onChange={(e) => setIngredients(e.target.value)}
