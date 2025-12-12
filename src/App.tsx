@@ -1,97 +1,77 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import "./App.css";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../amplify/data/resource";
-import {
-  Button,
-  Flex,
-  Heading,
-  Text,
-  TextField,
-  View,
-} from "@aws-amplify/ui-react";
 import { Amplify } from "aws-amplify";
-import outputs from "../amplify_outputs.json";
+import outputs from "./amplify_outputs.json";
 
 Amplify.configure(outputs);
 
 const client = generateClient<Schema>();
 
 function App() {
-  const [ingredients, setIngredients] = useState("");
   const [recipe, setRecipe] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const getRecipe = async () => {
-    if (!ingredients) {
-      return;
-    }
-    setLoading(true);
-    setRecipe(null);
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
+      setLoading(true);
       const { data, errors } = await client.queries.askBedrock({
-        ingredients: ingredients.split(",").map((i) => i.trim()),
+        ingredients: (
+          event.currentTarget.elements.namedItem("ingredients") as HTMLInputElement
+        ).value.split(',').map(s => s.trim()),
       });
       if (errors) {
-        console.error("Error getting recipe:", errors);
-        setRecipe("Error generating recipe. Please check the console.");
-      } else {
-        setRecipe(data?.body ?? "No recipe found.");
+        console.error(errors);
+        return;
       }
-    } catch (error) {
-      console.error("Error getting recipe:", error);
-      setRecipe("Error generating recipe. Please check the console.");
+      console.log(data);
+      setRecipe(data?.body ?? null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <View
-      textAlign="center"
-      padding="medium"
-      width="80%"
-      maxWidth="800px"
-      margin="0 auto"
-    >
-      <Heading level={1}>Meet Your Personal</Heading>
-      <Heading level={2} color="blue.60">
-        Recipe AI
-      </Heading>
-      <Text>
-        Simply type a few ingredients using the format ingredient1, ingredient2,
-        etc., and Recipe AI will generate an all-new recipe on demand...
-      </Text>
-      <Flex as="form" direction="column" gap="medium" marginTop="medium">
-                <TextField
-          label="Ingredients"
-          labelHidden
-          placeholder="Ingredient1, Ingredient2, Ingredient3,...etc"
-          value={ingredients}
-          onChange={(e) => setIngredients(e.target.value)}
-        />
-        <Button
-          type="button"
-          onClick={getRecipe}
-          isLoading={loading}
-          variation="primary"
-          loadingText="Generating..."
-        >
-          Generate
-        </Button>
-      </Flex>
-      {recipe && (
-        <View
-          marginTop="medium"
-          padding="medium"
-          border="1px solid"
-          borderColor="gray.200"
-          borderRadius="medium"
-        >
-          <Heading level={3}>Recipe Suggestion</Heading>
-          <Text>{recipe}</Text>
-        </View>
-      )}
-    </View>
+    <main>
+      <div className="app-container">
+        <div className="header-container">
+          <h1 className="main-header">
+            Meet Your Personal
+            <br />
+            <span className="highlight">Recipe AI</span>
+          </h1>
+          <p className="description">
+            Simply type a few ingredients using the format ingredient1, ingredient2,
+            etc., and Recipe AI will generate an all-new recipe on demand...
+          </p>
+        </div>
+        <form onSubmit={onSubmit} className="form-container">
+          <div className="search-container">
+            <input
+              type="text"
+              className="wide-input"
+              id="ingredients"
+              name="ingredients"
+              placeholder="Ingredient1, Ingredient2, Ingredient3, ... etc"
+            />
+            <button type="submit" className="search-button" disabled={loading}>
+              {loading ? "Generating..." : "Generate Recipe"}
+            </button>
+          </div>
+        </form>
+        {recipe && (
+          <div className="result-container">
+            <h2>Generated Recipe</h2>
+            <p className="result">{recipe}</p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
 
