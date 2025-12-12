@@ -84,6 +84,10 @@ import "./App.css";
 import type { Schema } from "../amplify/data/resource"; 
 import { generateClient } from "aws-amplify/data";
 import "@aws-amplify/ui-react/styles.css";
+import { Amplify } from "aws-amplify";
+import outputs from "../amplify_outputs.json";
+
+Amplify.configure(outputs);
 
 const amplifyClient = generateClient<Schema>({
   authMode: "userPool",
